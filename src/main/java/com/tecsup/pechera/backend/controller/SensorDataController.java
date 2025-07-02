@@ -8,24 +8,43 @@ import com.tecsup.pechera.backend.repository.SensorDataRepository;
 
 import java.time.LocalDateTime;
 
-@RestController
-@RequestMapping("/api/sensores")
+/**
+ * SensorDataController
+ *
+ * Controlador REST para manejar los datos de los sensores.
+ * Recibe información de los sensores y la retransmite a través de WebSockets.
+ *
+ * @author VitalPaw
+ * @version 1.0
+ * @since 2025-06-23
+ */
+@RestController // Marca esta clase como un controlador REST.
+@RequestMapping("/api/sensores") // Ruta base para todos los endpoints de este controlador.
 public class SensorDataController {
 
-    @Autowired
+    @Autowired 
     private SensorDataRepository repository;
 
-    @Autowired
+    @Autowired 
     private SimpMessagingTemplate messagingTemplate;
 
-    @PostMapping
+    /**
+     * Recibe y procesa datos de sensores.
+     *
+     * Guarda los datos recibidos en la base de datos y luego los envía
+     * a todos los clientes suscritos al tema WebSocket `/topic/sensores`.
+     *
+     * @param data Los datos del sensor enviados en el cuerpo de la petición.
+     * @return Los datos del sensor guardados.
+     */
+    @PostMapping // Mapea peticiones POST a /api/sensores.
     public SensorData recibirDatos(@RequestBody SensorData data) {
-        data.setFecha(LocalDateTime.now());
-        SensorData saved = repository.save(data);
+        data.setFecha(LocalDateTime.now()); // Establece la fecha y hora actual al dato recibido.
+        SensorData saved = repository.save(data); // Guarda los datos en la base de datos.
 
-        // Emitir por WebSocket a Kotlin
+        // Envía los datos guardados a través de WebSocket a todos los clientes suscritos a /topic/sensores.
         messagingTemplate.convertAndSend("/topic/sensores", saved);
 
-        return saved;
+        return saved; // Retorna los datos que fueron guardados.
     }
 }
